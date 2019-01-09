@@ -1,0 +1,22 @@
+<h1>Subscribed lists</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Url</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+<%= for subscribed_list <- @subscribed_lists do %>
+    <tr>
+      <td><%= subscribed_list.url %></td>
+      <td>
+        <%= link "Delete", to: Routes.subscribed_list_path(@conn, :delete, subscribed_list), method: :delete, data: [confirm: "Are you sure?"] %>
+      </td>
+    </tr>
+<% end %>
+  </tbody>
+</table>
+
+<span><%= link "Add new", to: Routes.subscribed_list_path(@conn, :new) %></span>

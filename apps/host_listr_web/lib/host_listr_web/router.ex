@@ -17,6 +17,7 @@ defmodule HostListrWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :index
+    resources "/subscribed_lists", SubscribedListController, only: [:index, :new, :create, :delete]
   end
 
   # Other scopes may use custom stacks.
