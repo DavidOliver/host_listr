@@ -3,7 +3,7 @@ defmodule HostListr.Repo.Migrations.CreateSubscribedLists do
 
   def change do
     create table(:subscribed_lists) do
-      add :url, :string, null: false
+      add :url, :string, null: false, size: 2048
       add :content, :binary
 
       timestamps()
