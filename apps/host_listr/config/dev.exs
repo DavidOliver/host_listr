@@ -4,10 +4,4 @@
 # the umbrella root.
 use Mix.Config
 
-# Configure your database
-config :host_listr, HostListr.Repo,
-  username: "hostlistr",
-  password: "NUCjyvyqIZXDbY",
-  database: "host_listr_dev",
-  hostname: "localhost",
-  pool_size: 10
+import_config "dev.secret.exs"
