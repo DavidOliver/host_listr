@@ -6,7 +6,7 @@ defmodule HostListr.Lists do
   import Ecto.Query, warn: false
   alias HostListr.Repo
 
-  alias HostListr.Lists.SubscribedList
+  alias HostListr.Lists.{SubscribedList, SubscribedListProcessor, SubscribedListDownloader}
 
   @doc """
   Returns the list of subscribed_lists.
@@ -18,7 +18,8 @@ defmodule HostListr.Lists do
 
   """
   def list_subscribed_lists do
-    Repo.all(SubscribedList)
+    query = from SubscribedList, select: [:id, :url, :inserted_at, :updated_at]
+    Repo.all(query)
   end
 
   @doc """
@@ -100,5 +101,29 @@ defmodule HostListr.Lists do
   """
   def change_subscribed_list(%SubscribedList{} = subscribed_list) do
     SubscribedList.changeset(subscribed_list, %{})
+  end
+
+
+  @doc """
+  """
+  def pull_subscribed_lists() do
+    list_subscribed_lists()
+    |> Enum.each(&pull_subscribed_list/1)
+  end
+
+  defp pull_subscribed_list(%SubscribedList{} = subscribed_list) do
+    {:ok, response} = download_subscribed_list(subscribed_list.url)
+    update_subscribed_list(subscribed_list, %{content: response.body})
+  end
+
+  defp download_subscribed_list(url) when is_binary(url) do
+    SubscribedListDownloader.get(url)
+  end
+
+
+  @doc """
+  """
+  def process_list(id) do
+    SubscribedListProcessor.process(id)
   end
 end

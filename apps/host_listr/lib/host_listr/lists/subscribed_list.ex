@@ -14,16 +14,14 @@ defmodule HostListr.Lists.SubscribedList do
   def changeset(subscribed_list, attrs) do
     subscribed_list
     |> cast(attrs, [:url])
-    |> validate_required([:url])
-    |> unique_constraint(:url)
+    |> changeset_common(attrs)
   end
 
   @doc false
   def changeset_create(subscribed_list, attrs) do
     subscribed_list
     |> cast(attrs, [:url])
-    |> validate_required([:url])
-    |> unique_constraint(:url)
+    |> changeset_common(attrs)
   end
 
   @doc false
@@ -31,5 +29,14 @@ defmodule HostListr.Lists.SubscribedList do
     subscribed_list
     |> cast(attrs, [:content])
     |> validate_required([:content])
+    |> changeset_common(attrs)
+  end
+
+  @doc false
+  def changeset_common(subscribed_list, attrs) do
+    subscribed_list
+    |> validate_required([:url])
+    |> validate_length(:url, max: 2048)
+    |> unique_constraint(:url)
   end
 end

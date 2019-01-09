@@ -37,7 +37,9 @@ defmodule HostListr.MixProject do
   defp deps do
     [
       {:ecto_sql, "~> 3.0"},
-      {:postgrex, ">= 0.0.0"}
+      {:postgrex, ">= 0.0.0"},
+      {:tesla, "~> 1.2.1"},
+      {:hackney, "~> 1.14.0"}
     ]
   end
 
