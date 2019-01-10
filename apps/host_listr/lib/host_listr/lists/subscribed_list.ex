@@ -33,7 +33,7 @@ defmodule HostListr.Lists.SubscribedList do
   end
 
   @doc false
-  def changeset_common(subscribed_list, attrs) do
+  def changeset_common(subscribed_list, _attrs) do
     subscribed_list
     |> validate_required([:url])
     |> validate_length(:url, max: 2048)
