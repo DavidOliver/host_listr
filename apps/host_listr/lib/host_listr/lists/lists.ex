@@ -18,8 +18,9 @@ defmodule HostListr.Lists do
 
   """
   def list_subscribed_lists do
-    query = from SubscribedList, select: [:id, :url, :inserted_at, :updated_at]
-    Repo.all(query)
+    SubscribedList
+    |> select_subscribed_lists_basics()
+    |> Repo.all()
   end
 
   @doc """
@@ -36,7 +37,11 @@ defmodule HostListr.Lists do
       ** (Ecto.NoResultsError)
 
   """
-  def get_subscribed_list!(id), do: Repo.get!(SubscribedList, id)
+  def get_subscribed_list!(id) do
+    SubscribedList
+    |> select_subscribed_lists_basics()
+    |> Repo.get!(id)
+  end
 
   @doc """
   Creates a subscribed_list.
@@ -102,6 +107,13 @@ defmodule HostListr.Lists do
   def change_subscribed_list(%SubscribedList{} = subscribed_list) do
     SubscribedList.changeset(subscribed_list, %{})
   end
+
+  defp select_subscribed_lists_basics(query) do
+    query
+    |> from(select: [:id, :url, :inserted_at, :updated_at])
+  end
+
+
 
 
   @doc """
