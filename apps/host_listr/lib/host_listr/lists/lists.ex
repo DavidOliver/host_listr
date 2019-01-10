@@ -112,12 +112,8 @@ defmodule HostListr.Lists do
   end
 
   defp pull_subscribed_list(%SubscribedList{} = subscribed_list) do
-    {:ok, response} = download_subscribed_list(subscribed_list.url)
+    {:ok, response} = SubscribedListDownloader.get(subscribed_list.url)
     update_subscribed_list(subscribed_list, %{content: response.body})
-  end
-
-  defp download_subscribed_list(url) when is_binary(url) do
-    SubscribedListDownloader.get(url)
   end
 
 
