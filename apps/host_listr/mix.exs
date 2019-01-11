@@ -39,7 +39,9 @@ defmodule HostListr.MixProject do
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0"},
       {:tesla, "~> 1.2.1"},
-      {:hackney, "~> 1.15.0"}
+      {:hackney, "~> 1.15.0"},
+      {:flow, "~> 0.14"},
+      {:benchee, "~> 0.13", only: :dev}
     ]
   end
 

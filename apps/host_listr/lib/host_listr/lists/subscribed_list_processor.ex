@@ -8,14 +8,39 @@ defmodule HostListr.Lists.SubscribedListProcessor do
     list_contents
     |> split_lines()
     |> Enum.map(&uncomment_line/1)
-    |> Enum.reject(&extraneous?/1)
-    |> Enum.map(&process_entry/1)
+    |> Enum.reject(&empty?/1)
+    |> Enum.map(&parse_hosts_format/1)
+    |> Enum.filter(&contains_dot?/1)
+    |> Enum.map(&parse_url/1)
     |> Enum.reject(&localhost?/1)
     |> Enum.join("\n")
   end
 
-  defp split_lines(blacklists_content) do
-    blacklists_content
+  def process_stream(list_contents_stream) do
+    list_contents_stream
+    |> Stream.map(&uncomment_line/1)
+    |> Stream.reject(&empty?/1)
+    |> Stream.map(&parse_hosts_format/1)
+    |> Stream.filter(&contains_dot?/1)
+    |> Stream.map(&parse_url/1)
+    |> Stream.reject(&localhost?/1)
+    |> Enum.join("\n")
+  end
+
+  def process_flow(list_contents_stage) do
+    list_contents_stage
+    |> Flow.from_stages()
+    |> Flow.map(&uncomment_line/1)
+    |> Flow.reject(&empty?/1)
+    |> Flow.map(&parse_hosts_format/1)
+    |> Flow.filter(&contains_dot?/1)
+    |> Flow.map(&parse_url/1)
+    |> Flow.reject(&localhost?/1)
+    |> Enum.join("\n")
+  end
+
+  defp split_lines(content) when is_binary(content) do
+    content
     |> String.replace("\r", "")
     |> String.split("\n", trim: true)
   end
@@ -27,28 +52,16 @@ defmodule HostListr.Lists.SubscribedListProcessor do
     |> String.trim()
   end
 
-  defp extraneous?(entry) when is_binary(entry) do
-    with false <- entry == "",
-         true  <- String.contains?(entry, ".")
-    do
-      false
-    else
-      _ -> true
-    end
-  end
-
-  defp process_entry(entry) when is_binary(entry) do
-    entry
-    |> parse_hosts_format()
-    |> parse_url()
-  end
+  defp empty?(line) when is_binary(line), do: line == ""
+  defp contains_dot?(line) when is_binary(line), do: String.contains?(line, ".")
 
   defp parse_hosts_format(entry) when is_binary(entry) do
     entry
     |> String.split(" ", trim: true)
     |> case do
          substrs when length(substrs) > 1 -> Enum.at(substrs, 1)
-         str -> hd(str)
+         [str] -> str
+         _ -> ""  # Still necessary? Remove to test with several blacklists.
        end
   end
 
@@ -71,5 +84,5 @@ defmodule HostListr.Lists.SubscribedListProcessor do
   defp localhost?(hostname) when is_binary(hostname) do
     Enum.member?(@localhost_hosts_with_dots, hostname)
   end
-
+  defp localhost?(_hostname), do: true  # what line is giving us nil here?
 end

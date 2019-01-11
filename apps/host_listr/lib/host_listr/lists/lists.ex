@@ -114,8 +114,6 @@ defmodule HostListr.Lists do
   end
 
 
-
-
   @doc """
   """
   def pull_subscribed_lists() do
@@ -132,6 +130,80 @@ defmodule HostListr.Lists do
   @doc """
   """
   def process_list(id) do
-    SubscribedListProcessor.process(id)
+    list = get_subscribed_list_content!(id)
+    SubscribedListProcessor.process(list.content)
+  end
+
+  defp get_subscribed_list_content!(id) do
+    SubscribedList
+    |> from(select: [:content])
+    |> Repo.get!(id)
+  end
+
+
+  # @doc """
+  # """
+  # def process_list_stream(id) do
+  #   stream = stream_subscribed_list_content!(id)
+  #   {:ok, processed_list_content} = Repo.transaction(fn() ->
+  #     SubscribedListProcessor.process_stream(stream)
+  #   end)
+  #   processed_list_content
+  # end
+
+  # https://hexdocs.pm/ecto/Ecto.Repo.html#c:stream/2
+  # https://hexdocs.pm/ecto_sql/Ecto.Adapters.SQL.html#stream/4
+  # defp stream_subscribed_list_content!(id) do
+  #   query = subscribed_list_content_query(id)
+  #   Repo.stream(query)
+  # end
+
+
+  @doc """
+  """
+  # Ecto 3.1 may make it possible to stream from an Ecto transaction to Flow.
+  # https://elixirforum.com/t/repo-stream-flow-from-enumerable/16477
+  # https://github.com/elixir-lang/gen_stage/issues/150
+  # def process_list_flow(id) do
+  #   stream = stream_subscribed_list_content!(id)
+  #   {:ok, processed_list_content} = Repo.transaction(fn() ->
+  #     SubscribedListProcessor.process_flow(stream)
+  #   end)
+  # end
+
+  # In the meantime, we're using Moritz Schmale's (narrowtux) module
+  # to "hack an Ecto stream into a GenStage producer".
+  def process_list_flow(id) do
+    pid =
+      id
+        |> subscribed_list_content_query()
+        |> RepoStream.query_into_stage(HostListr.Repo)
+    [pid]
+    |> SubscribedListProcessor.process_flow()
+  end
+
+
+  # split on line break *and* remove comments?
+  # |> select(fragment("split_part(regexp_split_to_table(content, '\\n'), '#', 1)"))
+  defp subscribed_list_content_query(id) do
+    SubscribedList
+    |> select(fragment("regexp_split_to_table(content, '\\n')"))
+    |> where(id: ^id)
+  end
+
+
+  def benchmark(id) do
+    Benchee.run(
+      %{
+        "process_list"        => fn -> process_list(id) end,
+        # "process_list_stream" => fn -> process_list_stream(id) end,
+        "process_list_flow"   => fn -> process_list_flow(id) end,
+      },
+      parallel: 1,
+      time: 1,
+      memory_time: 1,
+      console: [extended_statistics: true]
+    )
+    :ok
   end
 end

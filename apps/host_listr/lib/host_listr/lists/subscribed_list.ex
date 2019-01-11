@@ -4,7 +4,7 @@ defmodule HostListr.Lists.SubscribedList do
 
 
   schema "subscribed_lists" do
-    field :content, :binary
+    field :content, :string
     field :url, :string
 
     timestamps()

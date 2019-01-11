@@ -4,4 +4,7 @@
 # the umbrella root.
 use Mix.Config
 
+# config :logger,
+#   level: :info
+
 import_config "dev.secret.exs"
