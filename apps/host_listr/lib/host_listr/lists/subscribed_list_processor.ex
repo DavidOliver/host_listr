@@ -4,32 +4,8 @@ defmodule HostListr.Lists.SubscribedListProcessor do
 
   @localhost_hosts_with_dots ~w(0.0.0.0 localhost.localdomain)s
 
-  def process(list_contents) when is_binary(list_contents) do
-    list_contents
-    |> split_lines()
-    |> Enum.map(&uncomment_line/1)
-    |> Enum.reject(&empty?/1)
-    |> Enum.map(&parse_hosts_format/1)
-    |> Enum.filter(&contains_dot?/1)
-    |> Enum.map(&parse_url/1)
-    |> Enum.reject(&localhost?/1)
-    |> Enum.join("\n")
-  end
-
-  def process_stream(list_contents_stream) do
-    list_contents_stream
-    |> Stream.map(&uncomment_line/1)
-    |> Stream.reject(&empty?/1)
-    |> Stream.map(&parse_hosts_format/1)
-    |> Stream.filter(&contains_dot?/1)
-    |> Stream.map(&parse_url/1)
-    |> Stream.reject(&localhost?/1)
-    |> Enum.join("\n")
-  end
-
-  def process_flow(list_contents_stage) do
-    list_contents_stage
-    |> Flow.from_stages()
+  defp process_flow(flow) do
+    flow
     |> Flow.map(&uncomment_line/1)
     |> Flow.reject(&empty?/1)
     |> Flow.map(&parse_hosts_format/1)
@@ -39,10 +15,20 @@ defmodule HostListr.Lists.SubscribedListProcessor do
     |> Enum.join("\n")
   end
 
-  defp split_lines(content) when is_binary(content) do
-    content
+  # text, potentially multi-line
+  def process(hosts_source) when is_binary(hosts_source) do
+    hosts_source
     |> String.replace("\r", "")
     |> String.split("\n", trim: true)
+    |> Flow.from_enumerable()
+    |> process_flow()
+  end
+
+  # stages
+  def process(hosts_source) do
+    hosts_source
+    |> Flow.from_stages()
+    |> process_flow()
   end
 
   defp uncomment_line(line) when is_binary(line) do

@@ -164,7 +164,7 @@ defmodule HostListr.Lists do
   # Ecto 3.1 may make it possible to stream from an Ecto transaction to Flow.
   # https://elixirforum.com/t/repo-stream-flow-from-enumerable/16477
   # https://github.com/elixir-lang/gen_stage/issues/150
-  # def process_list_flow(id) do
+  # def process(id) do
   #   stream = stream_subscribed_list_content!(id)
   #   {:ok, processed_list_content} = Repo.transaction(fn() ->
   #     SubscribedListProcessor.process_flow(stream)
@@ -173,13 +173,13 @@ defmodule HostListr.Lists do
 
   # In the meantime, we're using Moritz Schmale's (narrowtux) module
   # to "hack an Ecto stream into a GenStage producer".
-  def process_list_flow(id) do
+  def process(id) do
     pid =
       id
         |> subscribed_list_content_query()
         |> RepoStream.query_into_stage(HostListr.Repo)
     [pid]
-    |> SubscribedListProcessor.process_flow()
+    |> SubscribedListProcessor.process()
   end
 
 
@@ -195,10 +195,9 @@ defmodule HostListr.Lists do
   def benchmark(id) do
     Benchee.run(
       %{
-        "process_list"        => fn -> process_list(id) end,
-        # "process_list_stream" => fn -> process_list_stream(id) end,
-        "process_list_flow"   => fn -> process_list_flow(id) end,
+        "process" => fn -> process(id) end
       },
+      warmup: 0,
       parallel: 1,
       time: 1,
       memory_time: 1,
